@@ -3,179 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblia Comparativa 3</title>
+    <title>Biblia Comparativa Online</title>
     <style>
-        /* Estilo para aumentar el tamaño de las listas desplegables */
-        select {
-            font-size: 18px;  /* Aumenta el tamaño de la fuente */
-            padding: 10px;    /* Aumenta el espacio dentro del select */
-            margin: 5px;      /* Añade un margen alrededor del select */
-            border-radius: 5px;  /* Añade bordes redondeados */
-            border: 2px solid #ccc; /* Borde suave */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
         }
-
-        /* Estilo para los botones */
-        button {
-            font-size: 20px;  /* Aumenta el tamaño de la fuente */
-            padding: 10px 20px; /* Aumenta el espacio alrededor del texto */
-            margin: 5px;      /* Añade un margen alrededor del botón */
-            cursor: pointer; /* Cambia el cursor al pasar por encima */
-            border-radius: 5px;  /* Bordes redondeados */
-            border: 2px solid #ccc; /* Borde suave */
-            background-color: #f0f0f0; /* Fondo claro */
+        h1 {
+            text-align: center;
         }
-
-        button:hover {
-            background-color: #dcdcdc; /* Color de fondo cuando el botón es hovered */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        /* Estilo para los títulos de cada versión de la Biblia (más pequeños que el texto bíblico) */
-        h2 {
-            font-size: 16px;  /* Tamaño de fuente más pequeño para los títulos de las versiones de la Biblia */
+        .verse {
+            margin-bottom: 15px;
+        }
+        .verse span {
+            font-weight: bold;
+        }
+        #output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #eee;
+            padding: 10px;
+            border-radius: 5px;
             margin-top: 20px;
+            font-family: monospace;
+            font-size: 14px;
         }
-
-        /* Estilo para los textos bíblicos (cambiado a 18px) */
-        p {
-            font-size: 18px;  /* Tamaño de fuente para los versículos (ahora 18px) */
-            line-height: 1.6; /* Espaciado entre líneas */
-        }
-
-        /* Estilo para los labels y selects para mantener todo alineado */
-        label {
-            font-size: 16px; /* Tamaño adecuado para las etiquetas */
-            margin-right: 10px; /* Espacio entre la etiqueta y el select */
-        }
-
-        /* Espaciado entre las listas */
-        br {
-            clear: both; /* Asegura que las listas se alineen correctamente */
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
     </style>
-    <script>
-        let libros = [];
-        let libroActual = "Génesis";
-        let capituloActual = "1";
-        let versiculoActual = 1;
-        let biblias = {};
-
-        async function cargarBiblia() {
-            const versiones = [
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/Reina-Valera%2060.xml", elemento: "biblia1", nombre: "Reina-Valera 1960" },
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/NTV.xml", elemento: "biblia2", nombre: "NTV" },
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/Biblia%20Latinoamericana%2095.xml", elemento: "biblia3", nombre: "Biblia Latinoamericana 95" },
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/NVI.xml", elemento: "biblia4", nombre: "NVI" },
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/LBLA.xml", elemento: "biblia5", nombre: "LBLA" },
-                { id: "https://github.com/caminodefeysantidad/BibliaComparativa/raw/main/DHH.xml", elemento: "biblia6", nombre: "DHH" }
-            ];
-            try {
-                for (const version of versiones) {
-                    const response = await fetch(version.id);
-                    const text = await response.text();
-                    const xml = new DOMParser().parseFromString(text, "application/xml");
-                    biblias[version.elemento] = procesarXML(xml);
-                }
-                actualizarSelectLibros();
-            } catch (error) {
-                versiones.forEach(v => document.getElementById(v.elemento).innerText = "Error al cargar la Biblia.");
-            }
-        }
-
-        function procesarXML(xml) {
-            let data = {};
-            const biblia = xml.getElementsByTagName("b");
-            for (let b of biblia) {
-                const libro = b.getAttribute("n");
-                if (!libros.includes(libro)) libros.push(libro);
-                data[libro] = {};
-                for (let c of b.getElementsByTagName("c")) {
-                    const numCapitulo = c.getAttribute("n");
-                    data[libro][numCapitulo] = Array.from(c.getElementsByTagName("v"), v => v.textContent);
-                }
-            }
-            return data;
-        }
-
-        function actualizarSelectLibros() {
-            const selectLibro = document.getElementById("selectLibro");
-            selectLibro.innerHTML = libros.map(libro => `<option value="${libro}">${libro}</option>`).join("");
-            selectLibro.value = libroActual;
-            actualizarSelectCapitulos();
-        }
-
-        function actualizarSelectCapitulos() {
-            const selectCapitulo = document.getElementById("selectCapitulo");
-            selectCapitulo.innerHTML = Object.keys(biblias["biblia1"][libroActual] || {}).map(num => `<option value="${num}">${num}</option>`).join("");
-            selectCapitulo.value = capituloActual;
-            actualizarSelectVersiculos();
-        }
-
-        function actualizarSelectVersiculos() {
-            const selectVersiculo = document.getElementById("selectVersiculo");
-            selectVersiculo.innerHTML = (biblias["biblia1"][libroActual]?.[capituloActual] || []).map((_, index) => `<option value="${index + 1}">${index + 1}</option>`).join("");
-            selectVersiculo.value = versiculoActual;
-            actualizarTextoTodasVersiones();
-        }
-
-        function actualizarTextoTodasVersiones() {
-            for (const [key, data] of Object.entries(biblias)) {
-                document.getElementById(key).innerText = data[libroActual]?.[capituloActual]?.[versiculoActual - 1] || "";
-            }
-        }
-
-        function cambiarLibro(event) {
-            libroActual = event.target.value;
-            actualizarSelectCapitulos();
-        }
-
-        function cambiarCapitulo(event) {
-            capituloActual = event.target.value;
-            actualizarSelectVersiculos();
-        }
-
-        function cambiarVersiculo(event) {
-            versiculoActual = parseInt(event.target.value);
-            actualizarTextoTodasVersiones();
-        }
-
-        function cambiarVersiculoBoton(direccion) {
-            const maxVersiculos = biblias["biblia1"][libroActual][capituloActual]?.length || 1;
-            versiculoActual = Math.max(1, Math.min(versiculoActual + direccion, maxVersiculos));
-            document.getElementById("selectVersiculo").value = versiculoActual;
-            actualizarTextoTodasVersiones();
-        }
-
-        window.onload = cargarBiblia;
-    </script>
 </head>
 <body>
-    <label for="selectLibro">Libro:</label>
-    <select id="selectLibro" onchange="cambiarLibro(event)"></select>
-    <br>
-    <label for="selectCapitulo">Capítulo:</label>
-    <select id="selectCapitulo" onchange="cambiarCapitulo(event)"></select>
-    <br>
-    <label>Versículo:</label>
-    <button onclick="cambiarVersiculoBoton(-1)">-</button>
-    <select id="selectVersiculo" onchange="cambiarVersiculo(event)"></select>
-    <button onclick="cambiarVersiculoBoton(1)">+</button>
-    <hr>
-    <h2>Reina-Valera 1960</h2>
-    <p id="biblia1">Cargando...</p>
-    <hr>
-    <h2>NTV</h2>
-    <p id="biblia2">Cargando...</p>
-    <hr>
-    <h2>Biblia Latinoamericana 95</h2>
-    <p id="biblia3">Cargando...</p>
-    <hr>
-    <h2>NVI</h2>
-    <p id="biblia4">Cargando...</p>
-    <hr>
-    <h2>LBLA</h2>
-    <p id="biblia5">Cargando...</p>
-    <hr>
-    <h2>DHH</h2>
-    <p id="biblia6">Cargando...</p>
+
+    <div class="container">
+        <h1>Biblia Comparativa Online</h1>
+        
+        <div>
+            <label for="bookSelect">Libro:</label>
+            <select id="bookSelect" onchange="updateChapters()">
+                <option value="">Libro</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="chapterSelect">Capítulo:</label>
+            <select id="chapterSelect" onchange="updateVerses()">
+                <option value="">Capítulo</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="verseSelect">Versículo:</label>
+            <select id="verseSelect">
+                <option value="">Versículo</option>
+            </select>
+        </div>
+
+        <button onclick="searchVerse()">Buscar</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let allVerses = [];  // Array para almacenar todos los versículos
+
+        function loadBible() {
+            const xmlUrl = 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml';
+
+            fetch(xmlUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar el archivo XML');
+                    }
+                    return response.text();
+                })
+                .then(xmlText => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+                    allVerses = [];
+                    const books = xmlDoc.getElementsByTagName('b');
+                    const bookSelect = document.getElementById('bookSelect');
+                    bookSelect.innerHTML = '<option value="">Libro</option>'; // Limpiar opciones
+
+                    for (let b = 0; b < books.length; b++) {
+                        const book = books[b];
+                        const bookName = book.getAttribute('n');
+                        const option = document.createElement('option');
+                        option.value = bookName;
+                        option.textContent = bookName;
+                        bookSelect.appendChild(option);
+
+                        const chapters = book.getElementsByTagName('c');
+                        const chapterSelect = document.getElementById('chapterSelect');
+                        chapterSelect.innerHTML = '<option value="">Capítulo</option>'; // Limpiar capítulos
+
+                        for (let c = 0; c < chapters.length; c++) {
+                            const chapter = chapters[c];
+                            const chapterNumber = chapter.getAttribute('n');
+                            const verseSelect = document.getElementById('verseSelect');
+                            verseSelect.innerHTML = '<option value="">Versículo</option>'; // Limpiar versículos
+
+                            const verses = chapter.getElementsByTagName('v');
+                            for (let v = 0; v < verses.length; v++) {
+                                const verse = verses[v];
+                                const verseNumber = verse.getAttribute('n');
+                                const verseText = verse.textContent.trim();
+
+                                allVerses.push({
+                                    book: bookName,
+                                    chapter: chapterNumber,
+                                    verse: verseNumber,
+                                    text: verseText
+                                });
+
+                                const verseOption = document.createElement('option');
+                                verseOption.value = `${bookName}-${chapterNumber}-${verseNumber}`;
+                                verseOption.textContent = `${verseNumber} - ${verseText}`;
+                                verseSelect.appendChild(verseOption);
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
+                });
+        }
+
+        function updateChapters() {
+            const selectedBook = document.getElementById('bookSelect').value;
+            const chapterSelect = document.getElementById('chapterSelect');
+            chapterSelect.innerHTML = '<option value="">Capítulo</option>'; // Limpiar capítulos
+
+            if (selectedBook) {
+                const book = allVerses.filter(verse => verse.book === selectedBook);
+                const chapters = [...new Set(book.map(verse => verse.chapter))];
+
+                chapters.forEach(chapter => {
+                    const option = document.createElement('option');
+                    option.value = chapter;
+                    option.textContent = chapter;
+                    chapterSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateVerses() {
+            const selectedBook = document.getElementById('bookSelect').value;
+            const selectedChapter = document.getElementById('chapterSelect').value;
+            const verseSelect = document.getElementById('verseSelect');
+            verseSelect.innerHTML = '<option value="">Versículo</option>'; // Limpiar versículos
+
+            if (selectedBook && selectedChapter) {
+                const verses = allVerses.filter(verse => verse.book === selectedBook && verse.chapter === selectedChapter);
+                verses.forEach(verse => {
+                    const option = document.createElement('option');
+                    option.value = `${verse.book}-${verse.chapter}-${verse.verse}`;
+                    option.textContent = verse.verse; // Solo mostrar el número del versículo
+                    verseSelect.appendChild(option);
+                });
+            }
+        }
+
+        function searchVerse() {
+            const selectedVerse = document.getElementById('verseSelect').value;
+            if (selectedVerse) {
+                const verseDetails = allVerses.find(verse => `${verse.book}-${verse.chapter}-${verse.verse}` === selectedVerse);
+                document.getElementById('output').innerHTML = `<strong>${verseDetails.book} ${verseDetails.chapter}:${verseDetails.verse}</strong> - ${verseDetails.text}`;
+            } else {
+                document.getElementById('output').innerHTML = 'Por favor selecciona un versículo.';
+            }
+        }
+
+        // Cargar los datos de la Biblia al cargar la página
+        window.onload = loadBible;
+    </script>
+
 </body>
 </html>
