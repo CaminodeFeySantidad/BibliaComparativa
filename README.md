@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblia Comparativa Online</title>
+    <title>Biblia Comparativa con Buscador Automático</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,7 +37,7 @@
             font-family: monospace;
             font-size: 14px;
         }
-        select, button {
+        select {
             padding: 10px;
             margin: 10px;
             font-size: 16px;
@@ -49,41 +49,38 @@
 <body>
 
     <div class="container">
-        <h1>Biblia Comparativa Online</h1>
+        <h1>Buscar Versículos en la Biblia</h1>
         
         <div>
-            <label for="bookSelect">Libro:</label>
+            <label for="bookSelect">Selecciona un Libro:</label>
             <select id="bookSelect" onchange="updateChapters()">
-                <option value="">Libro</option>
+                <option value="">Seleccionar Libro</option>
             </select>
         </div>
 
         <div>
-            <label for="chapterSelect">Capítulo:</label>
+            <label for="chapterSelect">Selecciona un Capítulo:</label>
             <select id="chapterSelect" onchange="updateVerses()">
-                <option value="">Capítulo</option>
+                <option value="">Seleccionar Capítulo</option>
             </select>
         </div>
 
         <div>
-            <label for="verseSelect">Versículo:</label>
-            <select id="verseSelect">
-                <option value="">Versículo</option>
+            <label for="verseSelect">Selecciona un Versículo:</label>
+            <select id="verseSelect" onchange="showVerse()">
+                <option value="">Seleccionar Versículo</option>
             </select>
         </div>
-
-        <button onclick="searchVerse()">Buscar</button>
 
         <div id="output"></div>
     </div>
 
     <script>
-        let allVerses = [];  // Array para almacenar todos los versículos
+        let bibleData = []; // Array para almacenar todos los versículos
 
+        // Cargar la Biblia desde un archivo XML
         function loadBible() {
-            const xmlUrl = 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml';
-
-            fetch(xmlUrl)
+            fetch('https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Error al cargar el archivo XML');
@@ -93,47 +90,40 @@
                 .then(xmlText => {
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-
-                    allVerses = [];
                     const books = xmlDoc.getElementsByTagName('b');
-                    const bookSelect = document.getElementById('bookSelect');
-                    bookSelect.innerHTML = '<option value="">Libro</option>'; // Limpiar opciones
 
+                    bibleData = [];
+                    const bookSelect = document.getElementById('bookSelect');
+                    bookSelect.innerHTML = '<option value="">Seleccionar Libro</option>'; // Limpiar opciones de libro
+
+                    // Iterar sobre los libros
                     for (let b = 0; b < books.length; b++) {
                         const book = books[b];
                         const bookName = book.getAttribute('n');
-                        const option = document.createElement('option');
-                        option.value = bookName;
-                        option.textContent = bookName;
-                        bookSelect.appendChild(option);
+                        const bookOption = document.createElement('option');
+                        bookOption.value = bookName;
+                        bookOption.textContent = bookName;
+                        bookSelect.appendChild(bookOption);
 
                         const chapters = book.getElementsByTagName('c');
-                        const chapterSelect = document.getElementById('chapterSelect');
-                        chapterSelect.innerHTML = '<option value="">Capítulo</option>'; // Limpiar capítulos
-
+                        // Iterar sobre los capítulos
                         for (let c = 0; c < chapters.length; c++) {
                             const chapter = chapters[c];
                             const chapterNumber = chapter.getAttribute('n');
-                            const verseSelect = document.getElementById('verseSelect');
-                            verseSelect.innerHTML = '<option value="">Versículo</option>'; // Limpiar versículos
 
                             const verses = chapter.getElementsByTagName('v');
+                            // Iterar sobre los versículos
                             for (let v = 0; v < verses.length; v++) {
                                 const verse = verses[v];
                                 const verseNumber = verse.getAttribute('n');
                                 const verseText = verse.textContent.trim();
 
-                                allVerses.push({
+                                bibleData.push({
                                     book: bookName,
                                     chapter: chapterNumber,
                                     verse: verseNumber,
                                     text: verseText
                                 });
-
-                                const verseOption = document.createElement('option');
-                                verseOption.value = `${bookName}-${chapterNumber}-${verseNumber}`;
-                                verseOption.textContent = `${verseNumber} - ${verseText}`;
-                                verseSelect.appendChild(verseOption);
                             }
                         }
                     }
@@ -143,15 +133,13 @@
                 });
         }
 
+        // Actualizar los capítulos según el libro seleccionado
         function updateChapters() {
             const selectedBook = document.getElementById('bookSelect').value;
             const chapterSelect = document.getElementById('chapterSelect');
-            chapterSelect.innerHTML = '<option value="">Capítulo</option>'; // Limpiar capítulos
-
+            chapterSelect.innerHTML = '<option value="">Seleccionar Capítulo</option>'; // Limpiar capítulos
             if (selectedBook) {
-                const book = allVerses.filter(verse => verse.book === selectedBook);
-                const chapters = [...new Set(book.map(verse => verse.chapter))];
-
+                const chapters = [...new Set(bibleData.filter(verse => verse.book === selectedBook).map(verse => verse.chapter))];
                 chapters.forEach(chapter => {
                     const option = document.createElement('option');
                     option.value = chapter;
@@ -161,34 +149,35 @@
             }
         }
 
+        // Actualizar los versículos según el libro y capítulo seleccionados
         function updateVerses() {
             const selectedBook = document.getElementById('bookSelect').value;
             const selectedChapter = document.getElementById('chapterSelect').value;
             const verseSelect = document.getElementById('verseSelect');
-            verseSelect.innerHTML = '<option value="">Versículo</option>'; // Limpiar versículos
-
+            verseSelect.innerHTML = '<option value="">Seleccionar Versículo</option>'; // Limpiar versículos
             if (selectedBook && selectedChapter) {
-                const verses = allVerses.filter(verse => verse.book === selectedBook && verse.chapter === selectedChapter);
+                const verses = bibleData.filter(verse => verse.book === selectedBook && verse.chapter === selectedChapter);
                 verses.forEach(verse => {
                     const option = document.createElement('option');
                     option.value = `${verse.book}-${verse.chapter}-${verse.verse}`;
-                    option.textContent = verse.verse; // Solo mostrar el número del versículo
+                    option.textContent = `${verse.verse} - ${verse.text}`;
                     verseSelect.appendChild(option);
                 });
             }
         }
 
-        function searchVerse() {
+        // Mostrar el versículo seleccionado
+        function showVerse() {
             const selectedVerse = document.getElementById('verseSelect').value;
             if (selectedVerse) {
-                const verseDetails = allVerses.find(verse => `${verse.book}-${verse.chapter}-${verse.verse}` === selectedVerse);
+                const verseDetails = bibleData.find(verse => `${verse.book}-${verse.chapter}-${verse.verse}` === selectedVerse);
                 document.getElementById('output').innerHTML = `<strong>${verseDetails.book} ${verseDetails.chapter}:${verseDetails.verse}</strong> - ${verseDetails.text}`;
             } else {
                 document.getElementById('output').innerHTML = 'Por favor selecciona un versículo.';
             }
         }
 
-        // Cargar los datos de la Biblia al cargar la página
+        // Cargar la Biblia al cargar la página
         window.onload = loadBible;
     </script>
 
