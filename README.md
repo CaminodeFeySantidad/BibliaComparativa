@@ -1,10 +1,9 @@
-# BibliaComparativa 2
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblia Comparativa</title>
+    <title>Biblia Comparativa 3</title>
     <style>
         /* Estilo para aumentar el tamaño de las listas desplegables */
         select {
