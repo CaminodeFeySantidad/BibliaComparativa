@@ -212,7 +212,10 @@
     }
 
     function showVerse(verseDetails) {
-      document.getElementById('output').textContent = verseDetails.text;
+      document.getElementById('output').innerHTML = `
+        <div style="text-align: center; font-size: 13px; font-weight: bold;">Reina Valera 1960</div>
+        <div>${verseDetails.text}</div>
+      `;
     }
 
     function toggleGrid(id) {
@@ -224,4 +227,3 @@
   </script>
 </body>
 </html>
-
