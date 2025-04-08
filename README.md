@@ -1,4 +1,4 @@
-# BibliaComparativa
+# BibliaComparativa 2
 <!DOCTYPE html>
 <html lang="es">
 <head>
