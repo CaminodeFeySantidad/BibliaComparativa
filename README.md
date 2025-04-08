@@ -66,6 +66,18 @@
     .hidden {
       display: none;
     }
+    .version-title {
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .version-text {
+      font-weight: normal;
+      font-size: 14px;
+      margin-top: 5px;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -88,6 +100,8 @@
     </div>
 
     <div id="output"></div>
+
+    <div id="versionResults"></div>
   </div>
 
   <script>
@@ -96,8 +110,26 @@
     let selectedChapter = '';
     let selectedVerse = '';
 
+    const bibleVersions = {
+      'Reina Valera 1960': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml',
+      'Latinoamericana 1995': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Latinoamericana%2095.xml',
+      'Nueva Traducción Viviente': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/NTV.xml',
+      'Nueva Versión Internacional': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/NVI.xml',
+      'Dios Habla Hoy': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/DHH.xml',
+      'La Biblia de Las Américas': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/LBLA.xml'
+    };
+
+    const versionOrder = [
+      'Reina Valera 1960',
+      'Latinoamericana 1995',
+      'Nueva Traducción Viviente',
+      'Nueva Versión Internacional',
+      'Dios Habla Hoy',
+      'La Biblia de Las Américas'
+    ];
+
     function loadBible() {
-      fetch('https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml')
+      fetch(bibleVersions['Reina Valera 1960'])
         .then(response => {
           if (!response.ok) throw new Error('Error al cargar el archivo XML');
           return response.text();
@@ -212,10 +244,39 @@
     }
 
     function showVerse(verseDetails) {
-      document.getElementById('output').innerHTML = `
-        <div style="text-align: center; font-size: 13px; font-weight: bold;">Reina Valera 1960</div>
-        <div>${verseDetails.text}</div>
-      `;
+      document.getElementById('output').textContent = '';  // Eliminar cualquier texto en el área de salida
+      fetchVersionVerses();
+    }
+
+    function fetchVersionVerses() {
+      const versionResults = document.getElementById('versionResults');
+      versionResults.innerHTML = '';  // Limpiar resultados anteriores
+
+      versionOrder.forEach(version => {
+        const versionDiv = document.createElement('div');
+        versionDiv.classList.add('version-title');
+        versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">Cargando...</div>`;  // Añadir texto por defecto
+        versionResults.appendChild(versionDiv);
+
+        fetch(bibleVersions[version])
+          .then(response => response.text())
+          .then(xmlText => {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+            const verses = xmlDoc.querySelectorAll(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
+
+            if (verses.length > 0) {
+              const verseText = verses[0].textContent.trim();
+              versionDiv.querySelector('.version-text').textContent = verseText;  // Actualizar el texto con el versículo correspondiente
+            } else {
+              versionDiv.querySelector('.version-text').textContent = 'Versículo no encontrado';  // Si no se encuentra el versículo
+            }
+          })
+          .catch(error => {
+            versionDiv.querySelector('.version-text').textContent = 'Error al cargar';  // Mostrar mensaje de error
+            console.error('Error al cargar la versión:', version, error);
+          });
+      });
     }
 
     function toggleGrid(id) {
