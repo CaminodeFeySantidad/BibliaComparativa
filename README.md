@@ -2,24 +2,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Biblia Comparativa</title>
+  <title>Biblia Comparativa con Buscador Automático</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      padding: 10px;
+      padding: 20px;
       background-color: #f4f4f4;
     }
     .container {
-      max-width: 800px;
-      width: 100%;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
       background-color: #fff;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+    #output {
+      display: none;
+    }
     select {
-      padding: 12px;
+      padding: 10px;
       margin: 10px 0;
       font-size: 16px;
       border-radius: 5px;
@@ -44,7 +46,7 @@
       background-color: #ccc;
     }
     .toggle-button {
-      padding: 12px;
+      padding: 10px;
       font-size: 16px;
       margin: 10px 0;
       border-radius: 5px;
@@ -69,31 +71,14 @@
       margin-top: 5px;
       text-align: left;
     }
-
-    /* Estilos para móvil */
-    @media (max-width: 600px) {
-      body {
-        padding: 5px;
-      }
-      .container {
-        padding: 10px;
-      }
-      .grid {
-        grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-      }
-      select, .toggle-button {
-        font-size: 18px;
-      }
-      .grid button {
-        font-size: 18px;
-        padding: 12px;
-      }
-      .version-title {
-        font-size: 18px;
-      }
-      .version-text {
-        font-size: 16px;
-      }
+    .row-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .row-buttons > div {
+      flex: 1;
     }
   </style>
 </head>
@@ -106,16 +91,18 @@
       </select>
     </div>
 
-    <div>
-      <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapterGrid')">Capítulo 1</button>
-      <div id="chapterGrid" class="grid hidden"></div>
+    <div class="row-buttons">
+      <div>
+        <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapterGrid')">Capítulo 1</button>
+        <div id="chapterGrid" class="grid hidden"></div>
+      </div>
+      <div>
+        <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
+        <div id="verseGrid" class="grid hidden"></div>
+      </div>
     </div>
 
-    <div>
-      <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
-      <div id="verseGrid" class="grid hidden"></div>
-    </div>
-
+    <div id="output"></div>
     <div id="versionResults"></div>
   </div>
 
@@ -145,7 +132,10 @@
 
     function loadBible() {
       fetch(bibleVersions['Reina Valera 1960'])
-        .then(response => response.text())
+        .then(response => {
+          if (!response.ok) throw new Error('Error al cargar el archivo XML');
+          return response.text();
+        })
         .then(xmlText => {
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -191,7 +181,7 @@
           }
         })
         .catch(error => {
-          alert('Error al cargar la Biblia: ' + error.message);
+          document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
         });
     }
 
@@ -265,9 +255,10 @@
           .then(xmlText => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-            const verse = xmlDoc.querySelector(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
-            if (verse) {
-              const verseText = verse.textContent.trim();
+            const verses = xmlDoc.querySelectorAll(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
+
+            if (verses.length > 0) {
+              const verseText = verses[0].textContent.trim();
               const versionDiv = document.createElement('div');
               versionDiv.classList.add('version-title');
               versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">${verseText}</div>`;
