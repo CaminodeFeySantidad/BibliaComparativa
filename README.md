@@ -1,185 +1,227 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Biblia Comparativa con Buscador Automático</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            text-align: center;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .verse {
-            margin-bottom: 15px;
-        }
-        .verse span {
-            font-weight: bold;
-        }
-        #output {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background-color: #eee;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-            font-family: monospace;
-            font-size: 14px;
-        }
-        select {
-            padding: 10px;
-            margin: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biblia Comparativa con Buscador Automático</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    #output {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    select {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      width: 100%;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .grid button {
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #e0e0e0;
+      cursor: pointer;
+    }
+    .grid button:hover {
+      background-color: #ccc;
+    }
+    .toggle-button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #aaa;
+      background-color: #ddd;
+      cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>Buscar Versículos en la Biblia</h1>
-        
-        <div>
-            <label for="bookSelect">Selecciona un Libro:</label>
-            <select id="bookSelect" onchange="updateChapters()">
-                <option value="">Seleccionar Libro</option>
-            </select>
-        </div>
-
-        <div>
-            <label for="chapterSelect">Selecciona un Capítulo:</label>
-            <select id="chapterSelect" onchange="updateVerses()">
-                <option value="">Seleccionar Capítulo</option>
-            </select>
-        </div>
-
-        <div>
-            <label for="verseSelect">Selecciona un Versículo:</label>
-            <select id="verseSelect" onchange="showVerse()">
-                <option value="">Seleccionar Versículo</option>
-            </select>
-        </div>
-
-        <div id="output"></div>
+  <div class="container">
+    <div>
+      <label for="bookSelect">Selecciona un Libro:</label>
+      <select id="bookSelect" onchange="updateChapters(true)">
+        <option value="">Seleccionar Libro</option>
+      </select>
     </div>
 
-    <script>
-        let bibleData = []; // Array para almacenar todos los versículos
+    <div>
+      <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapterGrid')">Capítulo 1</button>
+      <div id="chapterGrid" class="grid hidden"></div>
+    </div>
 
-        // Cargar la Biblia desde un archivo XML
-        function loadBible() {
-            fetch('https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Error al cargar el archivo XML');
-                    }
-                    return response.text();
-                })
-                .then(xmlText => {
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-                    const books = xmlDoc.getElementsByTagName('b');
+    <div>
+      <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
+      <div id="verseGrid" class="grid hidden"></div>
+    </div>
 
-                    bibleData = [];
-                    const bookSelect = document.getElementById('bookSelect');
-                    bookSelect.innerHTML = '<option value="">Seleccionar Libro</option>'; // Limpiar opciones de libro
+    <div id="output"></div>
+  </div>
 
-                    // Iterar sobre los libros
-                    for (let b = 0; b < books.length; b++) {
-                        const book = books[b];
-                        const bookName = book.getAttribute('n');
-                        const bookOption = document.createElement('option');
-                        bookOption.value = bookName;
-                        bookOption.textContent = bookName;
-                        bookSelect.appendChild(bookOption);
+  <script>
+    let bibleData = [];
+    let selectedBook = '';
+    let selectedChapter = '';
+    let selectedVerse = '';
 
-                        const chapters = book.getElementsByTagName('c');
-                        // Iterar sobre los capítulos
-                        for (let c = 0; c < chapters.length; c++) {
-                            const chapter = chapters[c];
-                            const chapterNumber = chapter.getAttribute('n');
+    function loadBible() {
+      fetch('https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml')
+        .then(response => {
+          if (!response.ok) throw new Error('Error al cargar el archivo XML');
+          return response.text();
+        })
+        .then(xmlText => {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+          const books = xmlDoc.getElementsByTagName('b');
 
-                            const verses = chapter.getElementsByTagName('v');
-                            // Iterar sobre los versículos
-                            for (let v = 0; v < verses.length; v++) {
-                                const verse = verses[v];
-                                const verseNumber = verse.getAttribute('n');
-                                const verseText = verse.textContent.trim();
+          bibleData = [];
+          const bookSelect = document.getElementById('bookSelect');
+          bookSelect.innerHTML = '<option value="">Seleccionar Libro</option>';
 
-                                bibleData.push({
-                                    book: bookName,
-                                    chapter: chapterNumber,
-                                    verse: verseNumber,
-                                    text: verseText
-                                });
-                            }
-                        }
-                    }
-                })
-                .catch(error => {
-                    document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
+          for (let b = 0; b < books.length; b++) {
+            const book = books[b];
+            const bookName = book.getAttribute('n');
+            const bookOption = document.createElement('option');
+            bookOption.value = bookName;
+            bookOption.textContent = bookName;
+            bookSelect.appendChild(bookOption);
+
+            const chapters = book.getElementsByTagName('c');
+            for (let c = 0; c < chapters.length; c++) {
+              const chapter = chapters[c];
+              const chapterNumber = chapter.getAttribute('n');
+
+              const verses = chapter.getElementsByTagName('v');
+              for (let v = 0; v < verses.length; v++) {
+                const verse = verses[v];
+                const verseNumber = verse.getAttribute('n');
+                const verseText = verse.textContent.trim();
+
+                bibleData.push({
+                  book: bookName,
+                  chapter: chapterNumber,
+                  verse: verseNumber,
+                  text: verseText
                 });
-        }
-
-        // Actualizar los capítulos según el libro seleccionado
-        function updateChapters() {
-            const selectedBook = document.getElementById('bookSelect').value;
-            const chapterSelect = document.getElementById('chapterSelect');
-            chapterSelect.innerHTML = '<option value="">Seleccionar Capítulo</option>'; // Limpiar capítulos
-            if (selectedBook) {
-                const chapters = [...new Set(bibleData.filter(verse => verse.book === selectedBook).map(verse => verse.chapter))];
-                chapters.forEach(chapter => {
-                    const option = document.createElement('option');
-                    option.value = chapter;
-                    option.textContent = chapter;
-                    chapterSelect.appendChild(option);
-                });
+              }
             }
+          }
+
+          const firstBook = bookSelect.options[1]?.value;
+          if (firstBook) {
+            bookSelect.value = firstBook;
+            updateChapters(true);
+          }
+        })
+        .catch(error => {
+          document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
+        });
+    }
+
+    function updateChapters(autoSelectFirst = false) {
+      selectedBook = document.getElementById('bookSelect').value;
+      selectedChapter = '';
+      selectedVerse = '';
+      const chapterGrid = document.getElementById('chapterGrid');
+      const verseGrid = document.getElementById('verseGrid');
+      chapterGrid.innerHTML = '';
+      verseGrid.innerHTML = '';
+      chapterGrid.classList.add('hidden');
+      verseGrid.classList.add('hidden');
+
+      if (selectedBook) {
+        const chapters = [...new Set(bibleData.filter(v => v.book === selectedBook).map(v => v.chapter))];
+        chapters.forEach(chapter => {
+          const btn = document.createElement('button');
+          btn.textContent = chapter;
+          btn.onclick = () => {
+            selectedChapter = chapter;
+            document.getElementById('chapterToggle').textContent = `Capítulo ${chapter}`;
+            updateVerses(true);
+            chapterGrid.classList.add('hidden');
+          };
+          chapterGrid.appendChild(btn);
+        });
+
+        if (autoSelectFirst && chapters.length > 0) {
+          selectedChapter = chapters[0];
+          document.getElementById('chapterToggle').textContent = `Capítulo ${selectedChapter}`;
+          updateVerses(true);
         }
+      }
+    }
 
-        // Actualizar los versículos según el libro y capítulo seleccionados
-        function updateVerses() {
-            const selectedBook = document.getElementById('bookSelect').value;
-            const selectedChapter = document.getElementById('chapterSelect').value;
-            const verseSelect = document.getElementById('verseSelect');
-            verseSelect.innerHTML = '<option value="">Seleccionar Versículo</option>'; // Limpiar versículos
-            if (selectedBook && selectedChapter) {
-                const verses = bibleData.filter(verse => verse.book === selectedBook && verse.chapter === selectedChapter);
-                verses.forEach(verse => {
-                    const option = document.createElement('option');
-                    option.value = `${verse.book}-${verse.chapter}-${verse.verse}`;
-                    option.textContent = `${verse.verse}`; // Solo mostrar el número
-                    verseSelect.appendChild(option);
-                });
-            }
+    function updateVerses(autoSelectFirst = false) {
+      const verseGrid = document.getElementById('verseGrid');
+      verseGrid.innerHTML = '';
+      verseGrid.classList.add('hidden');
+
+      if (selectedBook && selectedChapter) {
+        const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
+        verses.forEach(verse => {
+          const btn = document.createElement('button');
+          btn.textContent = verse.verse;
+          btn.onclick = () => {
+            selectedVerse = verse.verse;
+            document.getElementById('verseToggle').textContent = `Versículo ${verse.verse}`;
+            showVerse(verse);
+            verseGrid.classList.add('hidden');
+          };
+          verseGrid.appendChild(btn);
+        });
+
+        if (autoSelectFirst && verses.length > 0) {
+          selectedVerse = verses[0].verse;
+          document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
+          showVerse(verses[0]);
         }
+      }
+    }
 
-        // Mostrar solo el texto del versículo seleccionado
-        function showVerse() {
-            const selectedVerse = document.getElementById('verseSelect').value;
-            if (selectedVerse) {
-                const verseDetails = bibleData.find(verse => `${verse.book}-${verse.chapter}-${verse.verse}` === selectedVerse);
-                document.getElementById('output').textContent = verseDetails.text;
-            } else {
-                document.getElementById('output').textContent = 'Por favor selecciona un versículo.';
-            }
-        }
+    function showVerse(verseDetails) {
+      document.getElementById('output').textContent = verseDetails.text;
+    }
 
-        // Cargar la Biblia al cargar la página
-        window.onload = loadBible;
-    </script>
+    function toggleGrid(id) {
+      const grid = document.getElementById(id);
+      grid.classList.toggle('hidden');
+    }
 
+    window.onload = loadBible;
+  </script>
 </body>
 </html>
+
