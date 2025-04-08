@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -6,20 +7,29 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
       background-color: #f4f4f4;
     }
+
     .container {
-      max-width: 900px;
+      max-width: 800px;
       margin: auto;
       padding: 20px;
       background-color: #fff;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
+
     #output {
-      display: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-family: monospace;
+      font-size: 14px;
     }
+
     select {
       padding: 10px;
       margin: 10px 0;
@@ -28,12 +38,14 @@
       border: 1px solid #ddd;
       width: 100%;
     }
+
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
       gap: 10px;
       margin: 10px 0;
     }
+
     .grid button {
       padding: 10px;
       font-size: 16px;
@@ -42,9 +54,11 @@
       background-color: #e0e0e0;
       cursor: pointer;
     }
+
     .grid button:hover {
       background-color: #ccc;
     }
+
     .toggle-button {
       padding: 10px;
       font-size: 16px;
@@ -53,32 +67,61 @@
       border: 1px solid #aaa;
       background-color: #ddd;
       cursor: pointer;
-      width: 100%;
-      text-align: left;
+      width: auto;
+      min-width: 120px;
+      white-space: nowrap;
     }
+
+    .row-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: start;
+    }
+
+    .row-buttons > div {
+      flex: none;
+    }
+
     .hidden {
       display: none;
     }
+
     .version-title {
       font-weight: bold;
       font-size: 16px;
       margin-top: 20px;
       text-align: center;
     }
+
     .version-text {
       font-weight: normal;
       font-size: 14px;
       margin-top: 5px;
       text-align: left;
     }
-    .row-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .row-buttons > div {
-      flex: 1;
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 15px;
+        margin: 10px;
+      }
+
+      .toggle-button {
+        font-size: 14px;
+        min-width: 100px;
+        padding: 8px;
+      }
+
+      select {
+        font-size: 14px;
+      }
+
+      .grid button {
+        font-size: 14px;
+        padding: 8px;
+      }
     }
   </style>
 </head>
@@ -96,13 +139,13 @@
         <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapterGrid')">Capítulo 1</button>
         <div id="chapterGrid" class="grid hidden"></div>
       </div>
+
       <div>
         <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
         <div id="verseGrid" class="grid hidden"></div>
       </div>
     </div>
 
-    <div id="output"></div>
     <div id="versionResults"></div>
   </div>
 
@@ -181,7 +224,7 @@
           }
         })
         .catch(error => {
-          document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
+          console.error('Error:', error.message);
         });
     }
 
@@ -231,7 +274,7 @@
           btn.onclick = () => {
             selectedVerse = verse.verse;
             document.getElementById('verseToggle').textContent = `Versículo ${verse.verse}`;
-            fetchVersionVerses();
+            showVerse(verse);
             verseGrid.classList.add('hidden');
           };
           verseGrid.appendChild(btn);
@@ -240,9 +283,13 @@
         if (autoSelectFirst && verses.length > 0) {
           selectedVerse = verses[0].verse;
           document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
-          fetchVersionVerses();
+          showVerse(verses[0]);
         }
       }
+    }
+
+    function showVerse(verseDetails) {
+      fetchVersionVerses();
     }
 
     function fetchVersionVerses() {
