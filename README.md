@@ -160,20 +160,20 @@
                 verses.forEach(verse => {
                     const option = document.createElement('option');
                     option.value = `${verse.book}-${verse.chapter}-${verse.verse}`;
-                    option.textContent = `${verse.verse} - ${verse.text}`;
+                    option.textContent = `${verse.verse}`; // Solo mostrar el número
                     verseSelect.appendChild(option);
                 });
             }
         }
 
-        // Mostrar el versículo seleccionado
+        // Mostrar solo el texto del versículo seleccionado
         function showVerse() {
             const selectedVerse = document.getElementById('verseSelect').value;
             if (selectedVerse) {
                 const verseDetails = bibleData.find(verse => `${verse.book}-${verse.chapter}-${verse.verse}` === selectedVerse);
-                document.getElementById('output').innerHTML = `<strong>${verseDetails.book} ${verseDetails.chapter}:${verseDetails.verse}</strong> - ${verseDetails.text}`;
+                document.getElementById('output').textContent = verseDetails.text;
             } else {
-                document.getElementById('output').innerHTML = 'Por favor selecciona un versículo.';
+                document.getElementById('output').textContent = 'Por favor selecciona un versículo.';
             }
         }
 
