@@ -3,32 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Biblia Comparativa con Buscador Automático</title>
+  <title>Biblia Comparativa</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0;
+      padding: 10px;
       background-color: #f4f4f4;
     }
     .container {
       max-width: 800px;
+      width: 100%;
       margin: auto;
       padding: 20px;
       background-color: #fff;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
-    #output {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background-color: #eee;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 20px;
-      font-family: monospace;
-      font-size: 14px;
-    }
     select {
-      padding: 10px;
+      padding: 12px;
       margin: 10px 0;
       font-size: 16px;
       border-radius: 5px;
@@ -37,7 +29,7 @@
     }
     .grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
       gap: 10px;
       margin: 10px 0;
     }
@@ -53,7 +45,7 @@
       background-color: #ccc;
     }
     .toggle-button {
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       margin: 10px 0;
       border-radius: 5px;
@@ -78,6 +70,32 @@
       margin-top: 5px;
       text-align: left;
     }
+
+    /* Estilos para móvil */
+    @media (max-width: 600px) {
+      body {
+        padding: 5px;
+      }
+      .container {
+        padding: 10px;
+      }
+      .grid {
+        grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+      }
+      select, .toggle-button {
+        font-size: 18px;
+      }
+      .grid button {
+        font-size: 18px;
+        padding: 12px;
+      }
+      .version-title {
+        font-size: 18px;
+      }
+      .version-text {
+        font-size: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -98,8 +116,6 @@
       <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
       <div id="verseGrid" class="grid hidden"></div>
     </div>
-
-    <div id="output"></div>
 
     <div id="versionResults"></div>
   </div>
@@ -130,10 +146,7 @@
 
     function loadBible() {
       fetch(bibleVersions['Reina Valera 1960'])
-        .then(response => {
-          if (!response.ok) throw new Error('Error al cargar el archivo XML');
-          return response.text();
-        })
+        .then(response => response.text())
         .then(xmlText => {
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -179,7 +192,7 @@
           }
         })
         .catch(error => {
-          document.getElementById('output').textContent = 'Ocurrió un error: ' + error.message;
+          alert('Error al cargar la Biblia: ' + error.message);
         });
     }
 
@@ -229,7 +242,7 @@
           btn.onclick = () => {
             selectedVerse = verse.verse;
             document.getElementById('verseToggle').textContent = `Versículo ${verse.verse}`;
-            showVerse(verse);
+            fetchVersionVerses();
             verseGrid.classList.add('hidden');
           };
           verseGrid.appendChild(btn);
@@ -238,42 +251,31 @@
         if (autoSelectFirst && verses.length > 0) {
           selectedVerse = verses[0].verse;
           document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
-          showVerse(verses[0]);
+          fetchVersionVerses();
         }
       }
     }
 
-    function showVerse(verseDetails) {
-      document.getElementById('output').textContent = '';  // Eliminar cualquier texto en el área de salida
-      fetchVersionVerses();
-    }
-
     function fetchVersionVerses() {
       const versionResults = document.getElementById('versionResults');
-      versionResults.innerHTML = '';  // Limpiar resultados anteriores
+      versionResults.innerHTML = '';
 
       versionOrder.forEach(version => {
-        const versionDiv = document.createElement('div');
-        versionDiv.classList.add('version-title');
-        versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">Cargando...</div>`;  // Añadir texto por defecto
-        versionResults.appendChild(versionDiv);
-
         fetch(bibleVersions[version])
           .then(response => response.text())
           .then(xmlText => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-            const verses = xmlDoc.querySelectorAll(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
-
-            if (verses.length > 0) {
-              const verseText = verses[0].textContent.trim();
-              versionDiv.querySelector('.version-text').textContent = verseText;  // Actualizar el texto con el versículo correspondiente
-            } else {
-              versionDiv.querySelector('.version-text').textContent = 'Versículo no encontrado';  // Si no se encuentra el versículo
+            const verse = xmlDoc.querySelector(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
+            if (verse) {
+              const verseText = verse.textContent.trim();
+              const versionDiv = document.createElement('div');
+              versionDiv.classList.add('version-title');
+              versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">${verseText}</div>`;
+              versionResults.appendChild(versionDiv);
             }
           })
           .catch(error => {
-            versionDiv.querySelector('.version-text').textContent = 'Error al cargar';  // Mostrar mensaje de error
             console.error('Error al cargar la versión:', version, error);
           });
       });
