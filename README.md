@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -7,81 +6,75 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0;
       background-color: #f4f4f4;
     }
 
     .container {
-      max-width: 800px;
+      width: 100%;
+      max-width: 900px;
       margin: auto;
       padding: 20px;
       background-color: #fff;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    #output {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background-color: #eee;
-      padding: 10px;
-      border-radius: 5px;
-      margin-top: 20px;
-      font-family: monospace;
-      font-size: 14px;
+      box-sizing: border-box;
     }
 
     select {
-      padding: 10px;
-      margin: 10px 0;
+      padding: 12px;
+      margin: 12px 0;
       font-size: 16px;
-      border-radius: 5px;
-      border: 1px solid #ddd;
+      border-radius: 6px;
+      border: 1px solid #ccc;
       width: 100%;
+    }
+
+    .row-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .toggle-section {
+      flex: 1 1 48%;
+    }
+
+    .toggle-button {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #aaa;
+      background-color: #ddd;
+      cursor: pointer;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 10px;
       margin: 10px 0;
     }
 
     .grid button {
-      padding: 10px;
+      padding: 12px;
       font-size: 16px;
       border: none;
-      border-radius: 5px;
-      background-color: #e0e0e0;
+      border-radius: 6px;
       cursor: pointer;
+    }
+
+    .grid.chapter-mode button {
+      background-color: #e0f7fa;
+    }
+
+    .grid.verse-mode button {
+      background-color: #fce4ec;
     }
 
     .grid button:hover {
       background-color: #ccc;
-    }
-
-    .toggle-button {
-      padding: 10px;
-      font-size: 16px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #aaa;
-      background-color: #ddd;
-      cursor: pointer;
-      width: auto;
-      min-width: 120px;
-      white-space: nowrap;
-    }
-
-    .row-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-      justify-content: start;
-    }
-
-    .row-buttons > div {
-      flex: none;
     }
 
     .hidden {
@@ -90,61 +83,67 @@
 
     .version-title {
       font-weight: bold;
-      font-size: 16px;
-      margin-top: 20px;
-      text-align: center;
+      font-size: 18px;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+      color: #333;
     }
 
     .version-text {
-      font-weight: normal;
-      font-size: 14px;
-      margin-top: 5px;
-      text-align: left;
+      font-size: 16px;
+      line-height: 1.6;
+      padding: 10px 0;
+      color: #444;
     }
 
     @media (max-width: 600px) {
-      .container {
-        padding: 15px;
-        margin: 10px;
+      .toggle-section {
+        flex: 1 1 100%;
       }
 
       .toggle-button {
-        font-size: 14px;
-        min-width: 100px;
-        padding: 8px;
+        font-size: 15px;
+        padding: 10px;
       }
 
-      select {
-        font-size: 14px;
+      .grid {
+        grid-template-columns: repeat(5, 1fr);
       }
 
       .grid button {
         font-size: 14px;
-        padding: 8px;
+        padding: 10px;
+      }
+
+      .version-title {
+        font-size: 16px;
+      }
+
+      .version-text {
+        font-size: 15px;
       }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div>
-      <label for="bookSelect">Selecciona un Libro:</label>
-      <select id="bookSelect" onchange="updateChapters(true)">
-        <option value="">Seleccionar Libro</option>
-      </select>
-    </div>
+    <label for="bookSelect">Selecciona un Libro:</label>
+    <select id="bookSelect" onchange="updateChapters(true)">
+      <option value="">Seleccionar Libro</option>
+    </select>
 
     <div class="row-buttons">
-      <div>
-        <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapterGrid')">Capítulo 1</button>
-        <div id="chapterGrid" class="grid hidden"></div>
+      <div class="toggle-section">
+        <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapter')">Capítulo 1</button>
       </div>
-
-      <div>
-        <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verseGrid')">Versículo 1</button>
-        <div id="verseGrid" class="grid hidden"></div>
+      <div class="toggle-section">
+        <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verse')">Versículo 1</button>
       </div>
     </div>
+
+    <div id="numberGrid" class="grid hidden"></div>
 
     <div id="versionResults"></div>
   </div>
@@ -154,6 +153,7 @@
     let selectedBook = '';
     let selectedChapter = '';
     let selectedVerse = '';
+    let currentMode = '';
 
     const bibleVersions = {
       'Reina Valera 1960': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml',
@@ -164,21 +164,11 @@
       'La Biblia de Las Américas': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/LBLA.xml'
     };
 
-    const versionOrder = [
-      'Reina Valera 1960',
-      'Latinoamericana 1995',
-      'Nueva Traducción Viviente',
-      'Nueva Versión Internacional',
-      'Dios Habla Hoy',
-      'La Biblia de Las Américas'
-    ];
+    const versionOrder = Object.keys(bibleVersions);
 
     function loadBible() {
       fetch(bibleVersions['Reina Valera 1960'])
-        .then(response => {
-          if (!response.ok) throw new Error('Error al cargar el archivo XML');
-          return response.text();
-        })
+        .then(response => response.text())
         .then(xmlText => {
           const parser = new DOMParser();
           const xmlDoc = parser.parseFromString(xmlText, "application/xml");
@@ -188,30 +178,21 @@
           const bookSelect = document.getElementById('bookSelect');
           bookSelect.innerHTML = '<option value="">Seleccionar Libro</option>';
 
-          for (let b = 0; b < books.length; b++) {
-            const book = books[b];
-            const bookName = book.getAttribute('n');
+          for (let b of books) {
+            const bookName = b.getAttribute('n');
             const bookOption = document.createElement('option');
             bookOption.value = bookName;
             bookOption.textContent = bookName;
             bookSelect.appendChild(bookOption);
 
-            const chapters = book.getElementsByTagName('c');
-            for (let c = 0; c < chapters.length; c++) {
-              const chapter = chapters[c];
-              const chapterNumber = chapter.getAttribute('n');
-
-              const verses = chapter.getElementsByTagName('v');
-              for (let v = 0; v < verses.length; v++) {
-                const verse = verses[v];
-                const verseNumber = verse.getAttribute('n');
-                const verseText = verse.textContent.trim();
-
+            for (let c of b.getElementsByTagName('c')) {
+              const chapterNumber = c.getAttribute('n');
+              for (let v of c.getElementsByTagName('v')) {
                 bibleData.push({
                   book: bookName,
                   chapter: chapterNumber,
-                  verse: verseNumber,
-                  text: verseText
+                  verse: v.getAttribute('n'),
+                  text: v.textContent.trim()
                 });
               }
             }
@@ -222,9 +203,6 @@
             bookSelect.value = firstBook;
             updateChapters(true);
           }
-        })
-        .catch(error => {
-          console.error('Error:', error.message);
         });
     }
 
@@ -232,27 +210,9 @@
       selectedBook = document.getElementById('bookSelect').value;
       selectedChapter = '';
       selectedVerse = '';
-      const chapterGrid = document.getElementById('chapterGrid');
-      const verseGrid = document.getElementById('verseGrid');
-      chapterGrid.innerHTML = '';
-      verseGrid.innerHTML = '';
-      chapterGrid.classList.add('hidden');
-      verseGrid.classList.add('hidden');
-
+      document.getElementById('numberGrid').classList.add('hidden');
       if (selectedBook) {
         const chapters = [...new Set(bibleData.filter(v => v.book === selectedBook).map(v => v.chapter))];
-        chapters.forEach(chapter => {
-          const btn = document.createElement('button');
-          btn.textContent = chapter;
-          btn.onclick = () => {
-            selectedChapter = chapter;
-            document.getElementById('chapterToggle').textContent = `Capítulo ${chapter}`;
-            updateVerses(true);
-            chapterGrid.classList.add('hidden');
-          };
-          chapterGrid.appendChild(btn);
-        });
-
         if (autoSelectFirst && chapters.length > 0) {
           selectedChapter = chapters[0];
           document.getElementById('chapterToggle').textContent = `Capítulo ${selectedChapter}`;
@@ -262,11 +222,37 @@
     }
 
     function updateVerses(autoSelectFirst = false) {
-      const verseGrid = document.getElementById('verseGrid');
-      verseGrid.innerHTML = '';
-      verseGrid.classList.add('hidden');
-
       if (selectedBook && selectedChapter) {
+        const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
+        if (autoSelectFirst && verses.length > 0) {
+          selectedVerse = verses[0].verse;
+          document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
+          showVerse(verses[0]);
+        }
+      }
+    }
+
+    function toggleGrid(mode) {
+      const grid = document.getElementById('numberGrid');
+      grid.innerHTML = '';
+      currentMode = mode;
+      grid.classList.remove('hidden', 'chapter-mode', 'verse-mode');
+      grid.classList.add(mode === 'chapter' ? 'chapter-mode' : 'verse-mode');
+
+      if (mode === 'chapter') {
+        const chapters = [...new Set(bibleData.filter(v => v.book === selectedBook).map(v => v.chapter))];
+        chapters.forEach(chapter => {
+          const btn = document.createElement('button');
+          btn.textContent = chapter;
+          btn.onclick = () => {
+            selectedChapter = chapter;
+            document.getElementById('chapterToggle').textContent = `Capítulo ${chapter}`;
+            updateVerses(true);
+            grid.classList.add('hidden');
+          };
+          grid.appendChild(btn);
+        });
+      } else if (mode === 'verse') {
         const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
         verses.forEach(verse => {
           const btn = document.createElement('button');
@@ -275,16 +261,10 @@
             selectedVerse = verse.verse;
             document.getElementById('verseToggle').textContent = `Versículo ${verse.verse}`;
             showVerse(verse);
-            verseGrid.classList.add('hidden');
+            grid.classList.add('hidden');
           };
-          verseGrid.appendChild(btn);
+          grid.appendChild(btn);
         });
-
-        if (autoSelectFirst && verses.length > 0) {
-          selectedVerse = verses[0].verse;
-          document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
-          showVerse(verses[0]);
-        }
       }
     }
 
@@ -303,7 +283,6 @@
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "application/xml");
             const verses = xmlDoc.querySelectorAll(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
-
             if (verses.length > 0) {
               const verseText = verses[0].textContent.trim();
               const versionDiv = document.createElement('div');
@@ -311,16 +290,8 @@
               versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">${verseText}</div>`;
               versionResults.appendChild(versionDiv);
             }
-          })
-          .catch(error => {
-            console.error('Error al cargar la versión:', version, error);
           });
       });
-    }
-
-    function toggleGrid(id) {
-      const grid = document.getElementById(id);
-      grid.classList.toggle('hidden');
     }
 
     window.onload = loadBible;
