@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -308,56 +307,6 @@
           })
           .catch(error => console.error('Error al cargar la versión:', version, error));
       });
-    }
-
-    // Gestor de deslizamiento
-    let startTouchX = 0;
-
-    document.addEventListener('touchstart', function (e) {
-      startTouchX = e.changedTouches[0].pageX;
-    }, false);
-
-    document.addEventListener('touchend', function (e) {
-      const endTouchX = e.changedTouches[0].pageX;
-      const touchDifference = startTouchX - endTouchX;
-
-      if (Math.abs(touchDifference) > 50) { // Si la diferencia de deslizamiento es significativa
-        if (touchDifference > 0) {
-          // Deslizar hacia la izquierda, retroceder al versículo anterior
-          goToPreviousVerse();
-        } else {
-          // Deslizar hacia la derecha, avanzar al siguiente versículo
-          goToNextVerse();
-        }
-      }
-    }, false);
-
-    function goToNextVerse() {
-      if (selectedBook && selectedChapter && selectedVerse) {
-        const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
-        const currentIndex = verses.findIndex(v => v.verse === selectedVerse);
-        const nextVerse = verses[currentIndex + 1];
-
-        if (nextVerse) {
-          selectedVerse = nextVerse.verse;
-          document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
-          showVerse();
-        }
-      }
-    }
-
-    function goToPreviousVerse() {
-      if (selectedBook && selectedChapter && selectedVerse) {
-        const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
-        const currentIndex = verses.findIndex(v => v.verse === selectedVerse);
-        const previousVerse = verses[currentIndex - 1];
-
-        if (previousVerse) {
-          selectedVerse = previousVerse.verse;
-          document.getElementById('verseToggle').textContent = `Versículo ${selectedVerse}`;
-          showVerse();
-        }
-      }
     }
 
     window.onload = loadBible;
