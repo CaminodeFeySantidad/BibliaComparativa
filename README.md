@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -140,17 +139,16 @@
 </head>
 <body>
   <div class="container">
-    <label for="bookSelect">Selecciona un Libro:</label>
     <select id="bookSelect" onchange="updateChapters(true)">
       <option value="">Seleccionar Libro</option>
     </select>
 
     <div class="row-buttons">
       <div class="toggle-section">
-        <button id="chapterToggle" class="toggle-button" onclick="showGrid('chapter')">Capítulo 1</button>
+        <button id="chapterToggle" class="toggle-button" onclick="toggleGrid('chapter')">Capítulo 1</button>
       </div>
       <div class="toggle-section">
-        <button id="verseToggle" class="toggle-button" onclick="showGrid('verse')">Versículo 1</button>
+        <button id="verseToggle" class="toggle-button" onclick="toggleGrid('verse')">Versículo 1</button>
       </div>
     </div>
 
@@ -246,39 +244,46 @@
       }
     }
 
-    function showGrid(mode) {
-      currentMode = mode;
+    function toggleGrid(mode) {
       const grid = document.getElementById('sharedGrid');
-      grid.innerHTML = '';
-      grid.classList.remove('hidden', 'chapter-mode', 'verse-mode');
-      grid.classList.add(mode === 'chapter' ? 'chapter-mode' : 'verse-mode');
+      if (currentMode === mode) {
+        // If the same button is clicked, hide the grid
+        grid.classList.add('hidden');
+        currentMode = '';
+      } else {
+        currentMode = mode;
+        grid.classList.remove('hidden');
+        grid.innerHTML = '';
+        grid.classList.remove('chapter-mode', 'verse-mode');
+        grid.classList.add(mode === 'chapter' ? 'chapter-mode' : 'verse-mode');
 
-      if (mode === 'chapter') {
-        const chapters = [...new Set(bibleData.filter(v => v.book === selectedBook).map(v => v.chapter))];
-        chapters.forEach(ch => {
-          const btn = document.createElement('button');
-          btn.textContent = ch;
-          btn.onclick = () => {
-            selectedChapter = ch;
-            document.getElementById('chapterToggle').textContent = `Capítulo ${ch}`;
-            grid.classList.add('hidden');
-            updateVerses(true);
-          };
-          grid.appendChild(btn);
-        });
-      } else if (mode === 'verse') {
-        const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
-        verses.forEach(v => {
-          const btn = document.createElement('button');
-          btn.textContent = v.verse;
-          btn.onclick = () => {
-            selectedVerse = v.verse;
-            document.getElementById('verseToggle').textContent = `Versículo ${v.verse}`;
-            grid.classList.add('hidden');
-            showVerse();
-          };
-          grid.appendChild(btn);
-        });
+        if (mode === 'chapter') {
+          const chapters = [...new Set(bibleData.filter(v => v.book === selectedBook).map(v => v.chapter))];
+          chapters.forEach(ch => {
+            const btn = document.createElement('button');
+            btn.textContent = ch;
+            btn.onclick = () => {
+              selectedChapter = ch;
+              document.getElementById('chapterToggle').textContent = `Capítulo ${ch}`;
+              grid.classList.add('hidden');
+              updateVerses(true);
+            };
+            grid.appendChild(btn);
+          });
+        } else if (mode === 'verse') {
+          const verses = bibleData.filter(v => v.book === selectedBook && v.chapter === selectedChapter);
+          verses.forEach(v => {
+            const btn = document.createElement('button');
+            btn.textContent = v.verse;
+            btn.onclick = () => {
+              selectedVerse = v.verse;
+              document.getElementById('verseToggle').textContent = `Versículo ${v.verse}`;
+              grid.classList.add('hidden');
+              showVerse();
+            };
+            grid.appendChild(btn);
+          });
+        }
       }
     }
 
