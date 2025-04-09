@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -5,17 +6,15 @@
   <title>Biblia Comparativa</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 10px;
-      background-color: #f4f4f4;
     }
 
     .container {
       max-width: 900px;
       margin: auto;
       padding: 15px;
-      background-color: #fff;
+      background-color: rgba(255, 255, 255, 0.5);
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       border-radius: 8px;
     }
@@ -27,6 +26,7 @@
       border-radius: 5px;
       margin-bottom: 15px;
       border: 1px solid #ccc;
+      background-color: #fff;
     }
 
     .row-buttons {
@@ -168,11 +168,18 @@
       'Latinoamericana 1995': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Latinoamericana%2095.xml',
       'Nueva Traducción Viviente': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/NTV.xml',
       'Nueva Versión Internacional': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/NVI.xml',
-      'Dios Habla Hoy': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/DHH.xml',
-      'La Biblia de Las Américas': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/LBLA.xml'
+      'La Biblia de Las Américas': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/LBLA.xml',
+      'Dios Habla Hoy': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/DHH.xml'
     };
 
-    const versionOrder = Object.keys(bibleVersions);
+    const versionOrder = [
+      'Reina Valera 1960',
+      'Latinoamericana 1995',
+      'Nueva Traducción Viviente',
+      'Nueva Versión Internacional',
+      'La Biblia de Las Américas',
+      'Dios Habla Hoy'
+    ];
 
     function loadBible() {
       fetch(bibleVersions['Reina Valera 1960'])
@@ -247,7 +254,6 @@
     function toggleGrid(mode) {
       const grid = document.getElementById('sharedGrid');
       if (currentMode === mode) {
-        // If the same button is clicked, hide the grid
         grid.classList.add('hidden');
         currentMode = '';
       } else {
@@ -290,22 +296,51 @@
     function showVerse() {
       const versionResults = document.getElementById('versionResults');
       versionResults.innerHTML = '';
-      versionOrder.forEach(version => {
+
+      const fetchPromises = versionOrder.map(version =>
         fetch(bibleVersions[version])
           .then(response => response.text())
           .then(xmlText => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(xmlText, "application/xml");
-            const verses = xmlDoc.querySelectorAll(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
-            if (verses.length > 0) {
-              const verseText = verses[0].textContent.trim();
-              const versionDiv = document.createElement('div');
-              versionDiv.classList.add('version-title');
-              versionDiv.innerHTML = `<strong>${version}</strong><div class="version-text">${verseText}</div>`;
-              versionResults.appendChild(versionDiv);
-            }
+            const verseNode = xmlDoc.querySelector(`b[n="${selectedBook}"] c[n="${selectedChapter}"] v[n="${selectedVerse}"]`);
+            const verseText = verseNode ? verseNode.textContent.trim() : '(Versículo no encontrado)';
+            return { version, verseText };
           })
-          .catch(error => console.error('Error al cargar la versión:', version, error));
+          .catch(() => ({ version, verseText: '(Error al cargar)' }))
+      );
+
+      Promise.all(fetchPromises).then(results => {
+        results.forEach(({ version, verseText }) => {
+          const versionDiv = document.createElement('div');
+          versionDiv.classList.add('version-title');
+
+          const versionButton = document.createElement('button');
+          versionButton.style = "all: unset; cursor: pointer; font-weight: bold;";
+          versionButton.textContent = version;
+          versionButton.onclick = () => copyVerseText(versionButton, verseText);
+
+          versionDiv.appendChild(versionButton);
+          const verseDiv = document.createElement('div');
+          verseDiv.classList.add('version-text');
+          verseDiv.textContent = verseText;
+          versionDiv.appendChild(verseDiv);
+
+          versionResults.appendChild(versionDiv);
+        });
+      });
+    }
+
+    function copyVerseText(el, verseText) {
+      const reference = `${selectedBook} ${selectedChapter}:${selectedVerse} `;
+      const fullTextToCopy = reference + verseText;
+
+      navigator.clipboard.writeText(fullTextToCopy).then(() => {
+        const originalText = el.textContent;
+        el.textContent = originalText + ' Copiado';
+        setTimeout(() => {
+          el.textContent = originalText;
+        }, 1500);
       });
     }
 
