@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Biblia Comparativa con Buscador Automático</title>
+  <title>Biblia Comparativa</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -98,22 +99,33 @@
     }
 
     @media (max-width: 600px) {
+      .container {
+        padding: 10px;
+        max-width: 95vw;
+      }
+
+      #bookSelect {
+        font-size: 14px;
+        padding: 8px;
+      }
+
       .toggle-section {
         flex: 1 1 48%;
+        min-width: unset;
       }
 
       .toggle-button {
-        font-size: 15px;
-        padding: 10px;
+        font-size: 14px;
+        padding: 8px;
       }
 
       .grid {
-        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
       }
 
       .grid button {
-        font-size: 14px;
-        padding: 10px;
+        font-size: 13px;
+        padding: 8px;
       }
 
       .version-title {
@@ -151,7 +163,7 @@
     let selectedBook = '';
     let selectedChapter = '';
     let selectedVerse = '';
-    let currentMode = ''; // 'chapter' or 'verse'
+    let currentMode = '';
 
     const bibleVersions = {
       'Reina Valera 1960': 'https://raw.githubusercontent.com/caminodefeysantidad/BibliaComparativa/main/Reina-Valera%2060.xml',
