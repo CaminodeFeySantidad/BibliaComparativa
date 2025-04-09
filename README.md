@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -46,9 +45,14 @@
       padding: 10px;
       font-size: 16px;
       border-radius: 5px;
-      border: 1px solid #aaa;
-      background-color: #ddd;
+      border: 1px solid #242440;
+      background-color: #242440;
+      color: white;
       cursor: pointer;
+    }
+
+    .toggle-button:hover {
+      background-color: #1d1f35;
     }
 
     .grid {
@@ -63,20 +67,21 @@
       font-size: 16px;
       border: none;
       border-radius: 5px;
-      background-color: #e0e0e0;
+      background-color: white; /* Fondo blanco */
+      color: black; /* Texto negro */
       cursor: pointer;
     }
 
     .grid button:hover {
-      background-color: #ccc;
+      background-color: #f1f1f1; /* Fondo blanco claro al pasar el ratón */
     }
 
     .grid.chapter-mode button {
-      background-color: #e0e0e0;
+      background-color: white; /* Fondo blanco */
     }
 
     .grid.verse-mode button {
-      background-color: #f0e0ff;
+      background-color: white; /* Fondo blanco */
     }
 
     .hidden {
