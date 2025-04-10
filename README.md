@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -67,21 +68,21 @@
       font-size: 16px;
       border: none;
       border-radius: 5px;
-      background-color: white; /* Fondo blanco */
-      color: black; /* Texto negro */
+      background-color: white;
+      color: black;
       cursor: pointer;
     }
 
     .grid button:hover {
-      background-color: #f1f1f1; /* Fondo blanco claro al pasar el ratón */
+      background-color: #f1f1f1;
     }
 
     .grid.chapter-mode button {
-      background-color: white; /* Fondo blanco */
+      background-color: white;
     }
 
     .grid.verse-mode button {
-      background-color: white; /* Fondo blanco */
+      background-color: white;
     }
 
     .hidden {
@@ -323,7 +324,7 @@
           const versionButton = document.createElement('button');
           versionButton.style = "all: unset; cursor: pointer; font-weight: bold;";
           versionButton.textContent = version;
-          versionButton.onclick = () => copyVerseText(versionButton, verseText);
+          versionButton.onclick = () => copySingleVerse(version, verseText, versionButton);
 
           versionDiv.appendChild(versionButton);
           const verseDiv = document.createElement('div');
@@ -336,11 +337,11 @@
       });
     }
 
-    function copyVerseText(el, verseText) {
-      const reference = `${selectedBook} ${selectedChapter}:${selectedVerse} `;
-      const fullTextToCopy = reference + verseText;
+    function copySingleVerse(version, verseText, el) {
+      const reference = `${selectedBook} ${selectedChapter}:${selectedVerse}`;
+      const fullText = `${reference} ${verseText}`;
 
-      navigator.clipboard.writeText(fullTextToCopy).then(() => {
+      navigator.clipboard.writeText(fullText).then(() => {
         const originalText = el.textContent;
         el.textContent = originalText + ' Copiado';
         setTimeout(() => {
